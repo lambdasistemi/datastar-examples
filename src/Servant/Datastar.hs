@@ -46,7 +46,7 @@ instance
     where
     type ServerT (DatastarPatch method) m = m Text
 
-    hoistServerWithContext _ _ nt s = nt s
+    hoistServerWithContext _ _ nt = nt
 
     route Proxy _ctx action =
         leafRouter $ \env request respond ->
