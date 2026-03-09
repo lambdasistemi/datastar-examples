@@ -17,3 +17,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: nix build --quiet
+
+  formatting:
+    runs-on: [self-hosted, nixos]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: nix develop --quiet -c fourmolu -m check src
+
+  hlint:
+    runs-on: [self-hosted, nixos]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run HLint
+        run: nix develop --quiet -c hlint src

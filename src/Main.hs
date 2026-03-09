@@ -2,6 +2,7 @@ module Main (main) where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.ByteString.Lazy qualified as LBS
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding qualified as TE
 import Database.SQLite3 qualified as SQL
@@ -23,7 +24,7 @@ main :: IO ()
 main = do
     port <- maybe 3000 read <$> lookupEnv "PORT"
     dbPath <-
-        maybe "todos.db" id <$> lookupEnv "DB_PATH"
+        fromMaybe "todos.db" <$> lookupEnv "DB_PATH"
     DB.withDB dbPath $ \db -> do
         putStrLn $
             "Listening on http://localhost:"

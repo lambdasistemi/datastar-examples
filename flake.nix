@@ -28,6 +28,7 @@
               cabal = "latest";
               haskell-language-server = "latest";
               fourmolu = "latest";
+              hlint = "latest";
             };
             buildInputs = with pkgs; [
               just
