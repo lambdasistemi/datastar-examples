@@ -38,16 +38,18 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     needs: [build, formatting, hlint]
     runs-on: [self-hosted, nixos]
+    env:
+      DOCKER: /run/current-system/sw/bin/docker
     steps:
       - uses: actions/checkout@v4
-      - name: Build and load /run/current-system/sw/bin/docker image
+      - name: Build and load docker image
         run: |
-          nix build .#/run/current-system/sw/bin/docker-image --quiet
-          /run/current-system/sw/bin/docker load < result
+          nix build .#docker-image --quiet
+          $DOCKER load < result
       - name: Deploy
         run: |
           TAG=$(nix eval .#imageTag --raw)
           cd /home/paolino/services/todo
           sed -i "s/^VERSION=.*/VERSION=$TAG/" .env 2>/dev/null || echo "VERSION=$TAG" > .env
-          /run/current-system/sw/bin/docker compose up -d
+          $DOCKER compose up -d
           echo "Deployed $TAG to todo.dev.plutimus.com"
