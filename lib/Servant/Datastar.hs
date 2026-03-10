@@ -1,16 +1,36 @@
 module Servant.Datastar
-    ( DatastarPatch
+    ( -- * Combinators
+      DatastarPatch
+    , DatastarSSE
     , DatastarSignals
+
+      -- * Re-exports from datastar-hs
+    , ServerSentEventGenerator
+    , PatchElements (..)
+    , PatchSignals (..)
+    , ElementPatchMode (..)
+    , patchElements
+    , patchSignals
+    , sendPatchElements
+    , sendPatchSignals
+    , sendExecuteScript
     ) where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (FromJSON)
 import Data.Text (Text)
 import Hypermedia.Datastar
-    ( nullLogger
+    ( ElementPatchMode (..)
+    , PatchElements (..)
+    , PatchSignals (..)
+    , ServerSentEventGenerator
+    , nullLogger
     , patchElements
+    , patchSignals
     , readSignals
+    , sendExecuteScript
     , sendPatchElements
+    , sendPatchSignals
     , sseResponse
     )
 import Servant
@@ -32,11 +52,11 @@ import Servant.Server.Internal.DelayedIO
     , withRequest
     )
 
-{- | Datastar SSE endpoint combinator.
+{- | Simple datastar SSE endpoint.
 
 Handler returns 'Text' (HTML fragment), which
-gets wrapped in an SSE response with
-@patchElements@.
+gets wrapped in a single @patchElements@ SSE
+event with default outer morph mode.
 -}
 data DatastarPatch (method :: k)
 
@@ -66,6 +86,42 @@ instance
                             sseResponse nullLogger $ \gen ->
                                 sendPatchElements gen $
                                     patchElements txt
+
+{- | Full SSE endpoint combinator.
+
+Handler receives 'ServerSentEventGenerator' and
+can send multiple events, use different merge
+modes, patch signals, etc. The connection stays
+open until the handler returns.
+-}
+data DatastarSSE (method :: k)
+
+instance
+    (ReflectMethod method)
+    => HasServer (DatastarSSE method) context
+    where
+    type
+        ServerT (DatastarSSE method) m =
+            m (ServerSentEventGenerator -> IO ())
+
+    hoistServerWithContext _ _ nt = nt
+
+    route Proxy _ctx action =
+        leafRouter $ \env request respond ->
+            let method' =
+                    reflectMethod (Proxy :: Proxy method)
+                action' =
+                    addMethodCheck
+                        action
+                        (methodCheck method' request)
+            in  runAction
+                    action'
+                    env
+                    request
+                    respond
+                    $ \handler ->
+                        Route $
+                            sseResponse nullLogger handler
 
 {- | Extract datastar signals from request.
 

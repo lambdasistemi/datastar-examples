@@ -5,14 +5,19 @@ module Lucid.Datastar
       -- * Signals
     , signal
     , signals
+    , signalsIfMissing
     , bind
     , computed
 
       -- * Events
     , on
+    , onChange
     , onInit
     , onIntersect
     , onInterval
+
+      -- * Reactivity
+    , dEffect
 
       -- * Display
     , dShow
@@ -64,6 +69,7 @@ data DatastarI a where
     -- Signals
     Signal :: Text -> Text -> DatastarI ()
     Signals :: Text -> DatastarI ()
+    SignalsIfMissing :: Text -> DatastarI ()
     Bind :: Text -> DatastarI ()
     Computed :: Text -> Text -> DatastarI ()
     -- Events
@@ -71,6 +77,8 @@ data DatastarI a where
     Init :: [Modifier] -> Expr -> DatastarI ()
     OnIntersect :: [Modifier] -> Expr -> DatastarI ()
     OnInterval :: [Modifier] -> Expr -> DatastarI ()
+    -- Reactivity
+    Effect :: Text -> DatastarI ()
     -- Display
     Show :: Text -> DatastarI ()
     TextContent :: Text -> DatastarI ()
@@ -116,6 +124,11 @@ signal name val = singleton (Signal name val)
 signals :: Text -> Datastar ()
 signals expr = singleton (Signals expr)
 
+-- | Initialize signals only if missing
+signalsIfMissing :: Text -> Datastar ()
+signalsIfMissing expr =
+    singleton (SignalsIfMissing expr)
+
 -- | Two-way bind to a signal
 bind :: Text -> Datastar ()
 bind name = singleton (Bind name)
@@ -127,6 +140,11 @@ computed name expr = singleton (Computed name expr)
 -- | Attach event handler
 on :: Text -> [Modifier] -> Expr -> Datastar ()
 on event mods expr = singleton (On event mods expr)
+
+-- | Attach change event handler
+onChange :: [Modifier] -> Expr -> Datastar ()
+onChange mods expr =
+    singleton (On "change" mods expr)
 
 -- | Initialize expression on DOM init
 onInit :: Expr -> Datastar ()
@@ -141,6 +159,10 @@ onIntersect mods expr =
 onInterval :: [Modifier] -> Expr -> Datastar ()
 onInterval mods expr =
     singleton (OnInterval mods expr)
+
+-- | Reactive side-effect expression
+dEffect :: Text -> Datastar ()
+dEffect expr = singleton (Effect expr)
 
 -- | Conditional visibility
 dShow :: Text -> Datastar ()
@@ -257,6 +279,8 @@ datastar = go . view
         attr' ("data-signals:" <> name) val k
     go (Signals expr :>>= k) =
         attr' "data-signals" expr k
+    go (SignalsIfMissing expr :>>= k) =
+        attr' "data-signals__ifmissing" expr k
     go (Bind name :>>= k) =
         attr' ("data-bind:" <> name) "" k
     go (Computed name expr :>>= k) =
@@ -285,6 +309,8 @@ datastar = go . view
             )
             (renderExpr expr)
             k
+    go (Effect expr :>>= k) =
+        attr' "data-effect" expr k
     go (Show expr :>>= k) =
         attr' "data-show" expr k
     go (TextContent expr :>>= k) =
