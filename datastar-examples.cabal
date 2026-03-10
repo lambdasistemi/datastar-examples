@@ -109,11 +109,14 @@ executable datastar-examples
         , datastar-lucid
         , datastar-servant
         , http-media      >= 0.8   && < 1
+        , http-types      >= 0.12  && < 1
         , lucid           >= 2.11  && < 3
         , random          >= 1.2   && < 2
+        , tagged          >= 0.8   && < 1
         , servant         >= 0.20  && < 1
         , servant-server  >= 0.19  && < 1
         , text            >= 1.2   && < 3
+        , wai             >= 3.2   && < 4
         , warp            >= 3.2   && < 4
     ghc-options:
         -threaded

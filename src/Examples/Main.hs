@@ -2,12 +2,14 @@ module Main (main) where
 
 import Data.ByteString.Lazy qualified as LBS
 import Data.IORef (newIORef)
+import Data.Tagged (Tagged (..))
 import Lucid (Html, renderBS)
 import Network.Wai.Handler.Warp qualified as Warp
 import Servant
     ( Get
     , Handler
     , Proxy (..)
+    , Raw
     , serve
     , (:<|>) (..)
     , (:>)
@@ -54,9 +56,8 @@ import Examples.EditRow
     )
 import Examples.EditRow qualified as EditRow
 import Examples.FileUpload
-    ( FileUploadAPI
+    ( fileUploadApp
     , fileUploadPage
-    , fileUploadServer
     )
 import Examples.Index qualified as Index
 import Examples.InfiniteScroll
@@ -150,7 +151,8 @@ type ExamplesAPI =
                     :<|> "file-upload"
                         :> ( PageRoute
                                 :<|> "data"
-                                    :> FileUploadAPI
+                                    :> "upload"
+                                    :> Raw
                            )
                     :<|> "animations"
                         :> ( PageRoute
@@ -232,7 +234,8 @@ main = do
                                     progressBarRef
                              )
                         :<|> ( servePage fileUploadPage
-                                :<|> fileUploadServer
+                                :<|> Tagged
+                                    fileUploadApp
                              )
                         :<|> ( servePage animationsPage
                                 :<|> animationsServer
