@@ -14,21 +14,21 @@ jobs:
   build:
     runs-on: [self-hosted, nixos]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build
         run: nix build --quiet --accept-flake-config
 
   formatting:
     runs-on: [self-hosted, nixos]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check formatting
         run: nix develop --quiet --accept-flake-config -c fourmolu -m check src lib datastar-lucid
 
   hlint:
     runs-on: [self-hosted, nixos]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run HLint
         run: nix develop --quiet --accept-flake-config -c hlint src lib datastar-lucid
 
@@ -43,7 +43,7 @@ jobs:
             && 'datastar-examples.plutimus.com'
             || 'datastar-examples.dev.plutimus.com' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Deploy
         run: |
           nix build .#docker-image --quiet --accept-flake-config
@@ -58,7 +58,7 @@ jobs:
     needs: [build]
     runs-on: [self-hosted, nixos]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build server
         run: nix build --quiet --accept-flake-config
       - name: Install test dependencies
